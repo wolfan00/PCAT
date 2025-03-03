@@ -1,8 +1,7 @@
 const express = require('express');
 const ejs = require('ejs');
 const path = require('path');
-const db = require('./db');
-
+const { connection, createPhotos,getPhotos,getPhotosByID} = require(`./modules/photos`);
 const app = express();
 const port = 3000;
 
@@ -14,9 +13,12 @@ app.use(express.static('public'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 //routes
+app.get
 app.get('/', (req, res) => {
   //res.sendFile(path.resolve(__dirname, '.temp/index.html'));
-  res.render(`index`);
+  const photos = getPhotos((err,Photos)=>{
+    res.render(`index`,{photos:Photos});
+  });
 });
 app.get('/about', (req, res) => {
   //res.sendFile(path.resolve(__dirname, '.temp/index.html'));
@@ -30,7 +32,18 @@ app.get('/add', (req, res) => {
   //res.sendFile(path.resolve(__dirname, '.temp/index.html'));
   res.render(`add`);
 });
-app.post(`/photos`, (req, res) => {
-  console.log(req.body);
+app.post(`/photos`, async(req, res) => {
+  await createPhotos(req);
+  res.redirect(`/`);
+});
+app.get("/photos/:id", (req, res) => {
+  getPhotosByID(req.params.id, (err, Photos) => {
+    if (err) {
+      console.log(err);
+      return;
+    }
+    res.render('photos', { Photos });
+  });
+  
 });
 app.listen(port, () => console.log(`Sunucu ${port}! portunda başlatıldı.`));
