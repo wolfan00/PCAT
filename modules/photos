@@ -18,11 +18,11 @@ connection.connect((err) => {
 async function createPhotos(req) {
   const { title, description } = req.body; // POST ile gelen JSON verisi
   const date = moment().format('YYYY-MM-DD HH:mm:ss');
-  let query = 'INSERT INTO photos (title, description) VALUES (?, ?)';
+  let query = 'INSERT INTO photos (title, description,name) VALUES (?, ?,?)';
 
   try {
     await new Promise((resolve, reject) => {
-      connection.query(query, [title, description], (err, results) => {
+      connection.query(query, [title, description,req.files.image.name], (err, results) => {
         if (err) {
           console.error('Hata:', err);
           reject(err);
@@ -45,6 +45,7 @@ const getPhotos = (callback) => {
       id: photo.id,
       title: photo.title,
       description: photo.description,
+      name: photo.name,
     }));
     callback(null, Photos);
   });
@@ -66,11 +67,36 @@ const getPhotosByID = (id, callback) => {
       id: photo.id,
       title: photo.title,
       description: photo.description,
+      name:photo.name
     }));
     
     callback(null, photos);
   });
 };
+const updateToPhoto = (req,id, callback) => {
+  const { title, description } = req.body;
+  const newPhoto = {
+    title,
+    description,
+  };
+  getPhotosByID(id, (err, photo) => {
+    if(err){
+      callback(err,null);
+      return;
+    }
+    if(photo === null){
+      callback(null,null);
+      return;
+    }
+     connection.query('UPDATE photos SET title = ?, description = ? WHERE id = ?', [newPhoto.title, newPhoto.description, id], (err, results) => {
+      if (err) {
+        callback(err, null);
+        return;
+      }
+      callback(null, newPhoto);
+    });
+  });
+}
 
 
-module.exports = { connection, createPhotos, getPhotos,getPhotosByID};
+module.exports = { connection, createPhotos, getPhotos,getPhotosByID,updateToPhoto};
